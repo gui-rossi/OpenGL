@@ -66,7 +66,7 @@ class ObjLoader:
             colors[colors >= 0.5] = 1.0
             colors[colors < 0.5] = 0.0
 
-            #vertices = np.append(vertices, colors)
+            vertices = np.append(vertices, colors)
 
             #vertices.append(vertex_textcoords[vertex_position_textcoord[i]])
 
