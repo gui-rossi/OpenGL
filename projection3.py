@@ -57,6 +57,23 @@ cz_angle = 0.0
 ## Cube z angle increment
 cz_inc = 0.02
 
+# VARIABLES
+
+# translacao
+translacao_x = 0.0
+translacao_y = 0.0
+translacao_z = 0.0
+
+# rotacao
+rotacao_x = 0
+rotacao_y = 0
+rotacao_z = 0
+
+# escala
+escala_x = 0.3
+escala_y = 0.3
+escala_z = 0.3
+
 mode = None
 visualizacao = "line"
 keyboard_key = None
@@ -125,15 +142,15 @@ def display():
     gl.glUniformMatrix4fv(loc, 1, gl.GL_FALSE, projection.transpose())
 
 
-    # Cube.
+    # object.
     gl.glBindVertexArray(VAO1)
 
     # Define model matrix.
-    S = ut.matScale(0.3, 0.3, 0.3)
-    Rx = ut.matRotateX(np.radians(cx_angle))
-    Ry = ut.matRotateY(np.radians(cy_angle))
-    Rz = ut.matRotateZ(np.radians(cz_angle))
-    T  = ut.matTranslate(0.0, 0.0, -2.0)
+    S = ut.matScale(escala_x, escala_y, escala_z)
+    Rx = ut.matRotateX(np.radians(rotacao_x))
+    Ry = ut.matRotateY(np.radians(rotacao_y))
+    Rz = ut.matRotateZ(np.radians(rotacao_z))
+    T  = ut.matTranslate(translacao_x, translacao_y, translacao_z)
     model = np.matmul(Rz,S)
     model = np.matmul(Rx,model)
     model = np.matmul(T,model)
@@ -177,6 +194,10 @@ def keyboard(key, x, y):
     global mode
     global visualizacao
 
+    global translacao_z
+    global rotacao_z
+    global escala_z
+
     if key == b'\x1b'or key == b'q':
         sys.exit( )
     if key == b'v':
@@ -193,6 +214,21 @@ def keyboard(key, x, y):
     if key == b'e':
         mode = 'e'
 
+    if key == b'a':
+        if mode == 't': # tranlacao postiva em z
+            translacao_z = translacao_z + 0.5
+        elif mode == 'r':  # rotacao positiva em z
+            rotacao_z = rotacao_z + 20 if (rotacao_z + 20) < 360.0 else (360.0 - rotacao_z + 20)
+        elif mode == 'e':  # escala positiva em z
+            escala_z = escala_z + 0.2
+
+    elif key == b'd':
+        if mode == 't': # tranlacao negativa em z
+            translacao_z = translacao_z - 0.5
+        elif mode == 'r': # rotacao negativa em z
+            rotacao_z = rotacao_z - 20 if (rotacao_z - 20) < 0 else (360.0 + rotacao_z - 20)
+        elif mode == 'e':  # escala negativa em z
+            escala_z = escala_z - 0.2
 
     glut.glutPostRedisplay()
 
@@ -200,34 +236,48 @@ def SpecialInput(key, x, y):
     global keyboard_key
     global mode
 
+    global translacao_x
+    global translacao_y
+
+    global rotacao_x
+    global rotacao_y
+
+    global escala_x
+    global escala_y
+
     if key == glut.GLUT_KEY_UP:
-        if mode == 't':
-
-        elif mode == 'r':
-
-        elif mode == 'e':
+        if mode == 't': # translacao positiva em y
+            translacao_y = translacao_y + 0.5
+        elif mode == 'r': # rotacao positiva em x
+            rotacao_x = rotacao_x + 20 if (rotacao_x + 20) < 360.0 else (360.0 - rotacao_x + 20)
+        elif mode == 'e':  # escala positiva em y
+            escala_y = escala_y + 0.2
 
     elif key == glut.GLUT_KEY_DOWN:
-        if mode == 't':
-
-        elif mode == 'r':
-
-        elif mode == 'e':
+        if mode == 't': # translacao negativa em y
+            translacao_y = translacao_y - 0.5
+        elif mode == 'r': # rotacao negativa em x
+            rotacao_x = rotacao_x - 20 if (rotacao_x - 20) < 0 else (360.0 + rotacao_x - 20)
+        elif mode == 'e':  # escala negativa em y
+            escala_y = escala_y - 0.2
 
     elif key == glut.GLUT_KEY_LEFT:
-        if mode == 't':
-
-        elif mode == 'r':
-
-        elif mode == 'e':
+        if mode == 't': # translacao negativa em x
+            translacao_x = translacao_x - 0.5
+        elif mode == 'r': # rotacao negativa em y
+            rotacao_y = rotacao_y - 20 if (rotacao_y - 20) < 0 else (360.0 + rotacao_y - 20)
+        elif mode == 'e':  # escala negativa em x
+            escala_x = escala_x - 0.2
 
     elif key == glut.GLUT_KEY_RIGHT:
-        if mode == 't':
+        if mode == 't': # translacao positiva em x
+            translacao_x = translacao_x + 0.5
+        elif mode == 'r':  # rotacao positiva em y
+            rotacao_y = rotacao_y + 20 if (rotacao_y + 20) < 360.0 else (360.0 - rotacao_y + 20)
+        elif mode == 'e':  # escala positiva em x
+            escala_x = escala_x + 0.2
 
-        elif mode == 'r':
-
-        elif mode == 'e':
-
+    glut.glutPostRedisplay()
 
 ## Idle function.
 #
