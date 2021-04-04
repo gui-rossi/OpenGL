@@ -57,7 +57,7 @@ cz_angle = 0.0
 ## Cube z angle increment
 cz_inc = 0.02
 
-modo = None
+mode = None
 visualizacao = "line"
 keyboard_key = None
 
@@ -187,26 +187,46 @@ def keyboard(key, x, y):
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
             visualizacao = "line"
     if key == b't':
-        modo = 't'
+        mode = 't'
     if key == b'r':
-        modo = 'r'
+        mode = 'r'
     if key == b'e':
-        modo = 'e'
+        mode = 'e'
 
 
     glut.glutPostRedisplay()
 
 def SpecialInput(key, x, y):
     global keyboard_key
+    global mode
 
     if key == glut.GLUT_KEY_UP:
-        keyboard_key = 1
+        if mode == 't':
+
+        elif mode == 'r':
+
+        elif mode == 'e':
+
     elif key == glut.GLUT_KEY_DOWN:
-        keyboard_key = 2
+        if mode == 't':
+
+        elif mode == 'r':
+
+        elif mode == 'e':
+
     elif key == glut.GLUT_KEY_LEFT:
-        keyboard_key = 3
+        if mode == 't':
+
+        elif mode == 'r':
+
+        elif mode == 'e':
+
     elif key == glut.GLUT_KEY_RIGHT:
-        keyboard_key = 4
+        if mode == 't':
+
+        elif mode == 'r':
+
+        elif mode == 'e':
 
 
 ## Idle function.
