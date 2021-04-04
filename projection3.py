@@ -16,7 +16,8 @@ import utils as ut
 from ctypes import c_void_p
 import loader
 import pywavefront
-
+import sys
+import keyboard
 
 ## Window width.
 win_width  = 600
@@ -56,6 +57,9 @@ cz_angle = 0.0
 ## Cube z angle increment
 cz_inc = 0.02
 
+modo = None
+visualizacao = "line"
+keyboard_key = None
 
 vertices = np.array([], dtype='float32')
 scene = np.array([], dtype='float32')
@@ -171,11 +175,38 @@ def keyboard(key, x, y):
 
     global type_primitive
     global mode
+    global visualizacao
 
     if key == b'\x1b'or key == b'q':
         sys.exit( )
+    if key == b'v':
+        if visualizacao == "line":
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+            visualizacao = "fill"
+        elif visualizacao == "fill":
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
+            visualizacao = "line"
+    if key == b't':
+        modo = 't'
+    if key == b'r':
+        modo = 'r'
+    if key == b'e':
+        modo = 'e'
+
 
     glut.glutPostRedisplay()
+
+def SpecialInput(key, x, y):
+    global keyboard_key
+
+    if key == glut.GLUT_KEY_UP:
+        keyboard_key = 1
+    elif key == glut.GLUT_KEY_DOWN:
+        keyboard_key = 2
+    elif key == glut.GLUT_KEY_LEFT:
+        keyboard_key = 3
+    elif key == glut.GLUT_KEY_RIGHT:
+        keyboard_key = 4
 
 
 ## Idle function.
@@ -207,7 +238,10 @@ def initData():
     global scene
     global vertices
 
-    vertices = loader.ObjLoader.load_model("cube.obj").astype('float32')
+    if len(sys.argv) == 1:
+        vertices = loader.ObjLoader.load_model('cube.obj').astype('float32')
+    else:
+        vertices = loader.ObjLoader.load_model(str(sys.argv[1])).astype('float32')
 
     # Vertex array.
     VAO1 = gl.glGenVertexArrays(1)
@@ -223,7 +257,7 @@ def initData():
     gl.glEnableVertexAttribArray(0)
     gl.glVertexAttribPointer(1, 3, gl.GL_FLOAT, gl.GL_FALSE, 6*vertices.itemsize, c_void_p(3*vertices.itemsize))
     gl.glEnableVertexAttribArray(1)
-    
+
     # Unbind Vertex Array Object.
     gl.glBindVertexArray(0)
 
@@ -262,6 +296,7 @@ def main():
     glut.glutDisplayFunc(display)
     glut.glutKeyboardFunc(keyboard)
     glut.glutIdleFunc(idle);
+    glut.glutSpecialFunc(SpecialInput)
 
     glut.glutMainLoop()
 

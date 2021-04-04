@@ -74,7 +74,7 @@ class ObjLoader:
 
             i = i + 1
 
-        with np.printoptions(threshold=np.inf):
-            print (vertices)
+        #with np.printoptions(threshold=np.inf):
+            #print (vertices)
 
         return vertices
