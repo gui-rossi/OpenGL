@@ -58,6 +58,9 @@ cz_inc = 0.02
 
 # VARIABLES
 
+# vertices number
+vertices_num = 0
+
 # translacao
 translacao_x = 0.0
 translacao_y = 0.0
@@ -140,7 +143,6 @@ def display():
     # Send matrix to shader.
     gl.glUniformMatrix4fv(loc, 1, gl.GL_FALSE, projection.transpose())
 
-
     # object.
     gl.glBindVertexArray(VAO1)
 
@@ -150,18 +152,41 @@ def display():
     Ry = ut.matRotateY(np.radians(rotacao_y))
     Rz = ut.matRotateZ(np.radians(rotacao_z))
     T  = ut.matTranslate(translacao_x, translacao_y, translacao_z)
+
+    Tzero = ut.matTranslate(0.0, 0.0, 0.0)
+    T0 = ut.matTranslate(-escala_x, -escala_y, -escala_z)
+    Tz = ut.matTranslate(translacao_x, translacao_y, -translacao_z)
+    Ty = ut.matTranslate(translacao_x, -translacao_y, translacao_z)
+    Tx = ut.matTranslate(-translacao_x, translacao_y, translacao_z)
+
+    model = np.matmul(Tzero, S)
+    model = np.matmul(T, model)
+
+    model = np.matmul(Tz, model)
+    model = np.matmul(Rz, model)
+    model = np.matmul(T, model)
+
+    model = np.matmul(Tx, model)
+    model = np.matmul(Rx, model)
+    model = np.matmul(T, model)
+
+    model = np.matmul(Ty, model)
+    model = np.matmul(Ry, model)
+    model = np.matmul(T, model)
+
+    '''
+    model = np.matmul(Rz, S)
     model = np.matmul(Rz,S)
     model = np.matmul(Rx,model)
-    model = np.matmul(T,model)
     model = np.matmul(Ry,model)
     model = np.matmul(T,model)
-
+    '''
     # Retrieve location of model variable in shader.
     loc = gl.glGetUniformLocation(program, "model");
     # Send matrix to shader.
     gl.glUniformMatrix4fv(loc, 1, gl.GL_FALSE, model.transpose())
 
-    gl.glDrawArrays(gl.GL_TRIANGLES, 0, 36)
+    gl.glDrawArrays(gl.GL_TRIANGLES, 0, vertices_num)
 
     glut.glutSwapBuffers()
 
@@ -215,7 +240,7 @@ def keyboard(key, x, y):
 
     if key == b'a':
         if mode == 't': # tranlacao postiva em z
-            translacao_z = translacao_z + 0.5
+            translacao_z = translacao_z + 0.2
         elif mode == 'r':  # rotacao positiva em z
             rotacao_z = rotacao_z + 20 if (rotacao_z + 20) < 360.0 else (360.0 - rotacao_z + 20)
         elif mode == 'e':  # escala positiva em z
@@ -223,11 +248,11 @@ def keyboard(key, x, y):
 
     elif key == b'd':
         if mode == 't': # tranlacao negativa em z
-            translacao_z = translacao_z - 0.5
+            translacao_z = translacao_z - 0.2
         elif mode == 'r': # rotacao negativa em z
             rotacao_z = rotacao_z - 20 if (rotacao_z - 20) < 0 else (360.0 + rotacao_z - 20)
         elif mode == 'e':  # escala negativa em z
-            escala_z = escala_z - 0.2
+            escala_z = escala_z - 0.2 if (escala_z - 0.2) > 0.0 else escala_z
 
     glut.glutPostRedisplay()
 
@@ -246,7 +271,7 @@ def SpecialInput(key, x, y):
 
     if key == glut.GLUT_KEY_UP:
         if mode == 't': # translacao positiva em y
-            translacao_y = translacao_y + 0.5
+            translacao_y = translacao_y + 0.2
         elif mode == 'r': # rotacao positiva em x
             rotacao_x = rotacao_x + 20 if (rotacao_x + 20) < 360.0 else (360.0 - rotacao_x + 20)
         elif mode == 'e':  # escala positiva em y
@@ -254,23 +279,23 @@ def SpecialInput(key, x, y):
 
     elif key == glut.GLUT_KEY_DOWN:
         if mode == 't': # translacao negativa em y
-            translacao_y = translacao_y - 0.5
+            translacao_y = translacao_y - 0.2
         elif mode == 'r': # rotacao negativa em x
             rotacao_x = rotacao_x - 20 if (rotacao_x - 20) < 0 else (360.0 + rotacao_x - 20)
         elif mode == 'e':  # escala negativa em y
-            escala_y = escala_y - 0.2
+            escala_y = escala_y - 0.2 if (escala_y - 0.2) > 0.0 else escala_y
 
     elif key == glut.GLUT_KEY_LEFT:
         if mode == 't': # translacao negativa em x
-            translacao_x = translacao_x - 0.5
+            translacao_x = translacao_x - 0.2
         elif mode == 'r': # rotacao negativa em y
             rotacao_y = rotacao_y - 20 if (rotacao_y - 20) < 0 else (360.0 + rotacao_y - 20)
         elif mode == 'e':  # escala negativa em x
-            escala_x = escala_x - 0.2
+            escala_x = escala_x - 0.2 if (escala_x - 0.2) > 0.0 else escala_x
 
     elif key == glut.GLUT_KEY_RIGHT:
         if mode == 't': # translacao positiva em x
-            translacao_x = translacao_x + 0.5
+            translacao_x = translacao_x + 0.2
         elif mode == 'r':  # rotacao positiva em y
             rotacao_y = rotacao_y + 20 if (rotacao_y + 20) < 360.0 else (360.0 - rotacao_y + 20)
         elif mode == 'e':  # escala positiva em x
@@ -306,11 +331,14 @@ def initData():
     global VBO2
     global scene
     global vertices
+    global vertices_num
 
     if len(sys.argv) == 1:
         vertices = loader.ObjLoader.load_model('cube.obj').astype('float32')
     else:
         vertices = loader.ObjLoader.load_model(str(sys.argv[1])).astype('float32')
+
+    vertices_num = (len(vertices)/6).__int__()
 
     # Vertex array.
     VAO1 = gl.glGenVertexArrays(1)
