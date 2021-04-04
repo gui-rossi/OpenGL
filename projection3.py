@@ -17,7 +17,6 @@ from ctypes import c_void_p
 import loader
 import pywavefront
 import sys
-import keyboard
 
 ## Window width.
 win_width  = 600
@@ -348,6 +347,33 @@ def initShaders():
 #
 # Init GLUT and the window settings. Also, defines the callback functions used in the program.
 def main():
+
+    print("-----------------------------------------------------------")
+    print("Alternar entre Fill e Wireframe: 'v'")
+    print("Modo Translação: 't'")
+    print("\t →  : deslocamento positivo em X")
+    print("\t ←  : deslocamento negativo em X")
+    print("\t ↑  : deslocamento positivo em Y")
+    print("\t ↓  : deslocamento negativo em Y")
+    print("\t'a' : deslocamento positivo em Z")
+    print("\t'b' : deslocamento negativo em Z")
+
+    print("Modo Rotação: 'r'")
+    print("\t ↑  : rotação positivo em X")
+    print("\t ↓  : rotação negativo em X")
+    print("\t →  : rotação positivo em Y")
+    print("\t ←  : rotação negativo em Y")
+    print("\t'a' : rotação positivo em Z")
+    print("\t'b' : rotação negativo em Z")
+
+    print("Modo Escala: 'e'")
+    print("\t →  : fator positivo em X")
+    print("\t ←  : fator negativo em X")
+    print("\t ↑  : fator positivo em Y")
+    print("\t ↓  : fator negativo em Y")
+    print("\t'a' : fator positivo em Z")
+    print("\t'b' : fator negativo em Z")
+    print("-----------------------------------------------------------")
 
     glut.glutInit()
     glut.glutInitContextVersion(3, 3);
