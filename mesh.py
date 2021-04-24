@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-
-## @file projection3.py
-# Applies a perspective projection to draw a cube and a pyramid.
-# 
-# @author Ricardo Dutra da Silva
+# @author Guilherme Rossi
 
 
 import sys
@@ -11,12 +7,11 @@ import ctypes
 import numpy as np
 import OpenGL.GL as gl
 import OpenGL.GLUT as glut
-sys.path.append('../lib/')
+sys.path.append('lib/')
 import utils as ut
 from ctypes import c_void_p
 import loader
 import pywavefront
-import sys
 
 ## Window width.
 win_width  = 600
@@ -76,6 +71,12 @@ escala_x = 0.3
 escala_y = 0.3
 escala_z = 0.3
 
+# center of obj
+cx = 0
+cy = 0
+cz = 0
+
+lastModel = None
 mode = None
 visualizacao = "line"
 keyboard_key = None
@@ -87,20 +88,20 @@ scene = np.array([], dtype='float32')
 vertex_code = """
 #version 330 core
 layout (location = 0) in vec3 position;
-layout (location = 1) in vec3 color;
-layout (location = 2) in vec3 normals;
-layout (location = 3) in vec2 text_coord;
-
-out vec3 vColor;
+layout (location = 1) in vec3 normal;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
+out vec3 vNormal;
+out vec3 fragPosition;
+
 void main()
 {
     gl_Position = projection * view * model * vec4(position, 1.0);
-    vColor = color;
+    vNormal = normal;
+    fragPosition = vec3(model * vec4(position, 1.0));
 }
 """
 
@@ -108,12 +109,37 @@ void main()
 fragment_code = """
 #version 330 core
 
-in vec3 vColor;
-out vec4 FragColor;
+in vec3 vNormal;
+in vec3 fragPosition;
+
+out vec4 fragColor;
+
+uniform vec3 objectColor;
+uniform vec3 lightColor;
+uniform vec3 lightPosition;
+uniform vec3 cameraPosition;
 
 void main()
 {
-    FragColor = vec4(vColor, 1.0f);
+    float ka = 0.5;
+    vec3 ambient = ka * lightColor;
+
+    float kd = 0.8;
+    vec3 n = normalize(vNormal);
+    vec3 l = normalize(lightPosition - fragPosition);
+    
+    float diff = max(dot(n,l), 0.0);
+    vec3 diffuse = kd * diff * lightColor;
+
+    float ks = 1.0;
+    vec3 v = normalize(cameraPosition - fragPosition);
+    vec3 r = reflect(-l, n);
+
+    float spec = pow(max(dot(v, r), 0.0), 3.0);
+    vec3 specular = ks * spec * lightColor;
+
+    vec3 light = (ambient + diffuse + specular) * objectColor;
+    fragColor = vec4(light, 1.0);
 } 
 """
 
@@ -128,7 +154,7 @@ def display():
     gl.glUseProgram(program)
 
     # Define view matrix.
-    view = ut.matTranslate(0.0, 0.0, -3.0)
+    view = ut.matTranslate(0.0, 0.0, -6.0)
 
     # Retrieve location of view variable in shader.
     loc = gl.glGetUniformLocation(program, "view");
@@ -148,43 +174,51 @@ def display():
 
     # Define model matrix.
     S = ut.matScale(escala_x, escala_y, escala_z)
+
     Rx = ut.matRotateX(np.radians(rotacao_x))
     Ry = ut.matRotateY(np.radians(rotacao_y))
     Rz = ut.matRotateZ(np.radians(rotacao_z))
+
     T  = ut.matTranslate(translacao_x, translacao_y, translacao_z)
 
+    TcentroNeg = ut.matTranslate(translacao_x-cx, translacao_y-cy, translacao_z-cz)
+    #Tcentro = ut.matTranslate(cx, cy, cz)
     Tzero = ut.matTranslate(0.0, 0.0, 0.0)
-    T0 = ut.matTranslate(-escala_x, -escala_y, -escala_z)
+
     Tz = ut.matTranslate(translacao_x, translacao_y, -translacao_z)
     Ty = ut.matTranslate(translacao_x, -translacao_y, translacao_z)
     Tx = ut.matTranslate(-translacao_x, translacao_y, translacao_z)
 
-    model = np.matmul(Tzero, S)
-    model = np.matmul(T, model)
-
-    model = np.matmul(Tz, model)
-    model = np.matmul(Rz, model)
-    model = np.matmul(T, model)
+    model = np.matmul(TcentroNeg, S)
 
     model = np.matmul(Tx, model)
     model = np.matmul(Rx, model)
-    model = np.matmul(T, model)
+
+    model = np.matmul(Tz, model)
+    model = np.matmul(Rz, model)
 
     model = np.matmul(Ty, model)
     model = np.matmul(Ry, model)
+
     model = np.matmul(T, model)
 
-    '''
-    model = np.matmul(Rz, S)
-    model = np.matmul(Rz,S)
-    model = np.matmul(Rx,model)
-    model = np.matmul(Ry,model)
-    model = np.matmul(T,model)
-    '''
     # Retrieve location of model variable in shader.
     loc = gl.glGetUniformLocation(program, "model");
     # Send matrix to shader.
     gl.glUniformMatrix4fv(loc, 1, gl.GL_FALSE, model.transpose())
+
+    # Object color.
+    loc = gl.glGetUniformLocation(program, "objectColor")
+    gl.glUniform3f(loc, 0.5, 0.1, 0.1)
+    # Light color.
+    loc = gl.glGetUniformLocation(program, "lightColor")
+    gl.glUniform3f(loc, 1.0, 1.0, 1.0)
+    # Light position.
+    loc = gl.glGetUniformLocation(program, "lightPosition")
+    gl.glUniform3f(loc, 0.0, 0.0, 0.0)
+    # Camera position.
+    loc = gl.glGetUniformLocation(program, "cameraPosition")
+    gl.glUniform3f(loc, 0.0, 0.0, 0.0)
 
     gl.glDrawArrays(gl.GL_TRIANGLES, 0, vertices_num)
 
@@ -242,7 +276,7 @@ def keyboard(key, x, y):
         if mode == 't': # tranlacao postiva em z
             translacao_z = translacao_z + 0.2
         elif mode == 'r':  # rotacao positiva em z
-            rotacao_z = rotacao_z + 20 if (rotacao_z + 20) < 360.0 else (360.0 - rotacao_z + 20)
+            rotacao_z = rotacao_z + 20 if (rotacao_z + 20) < 360.0 else (rotacao_z + 20 - 360.0)
         elif mode == 'e':  # escala positiva em z
             escala_z = escala_z + 0.2
 
@@ -273,7 +307,7 @@ def SpecialInput(key, x, y):
         if mode == 't': # translacao positiva em y
             translacao_y = translacao_y + 0.2
         elif mode == 'r': # rotacao positiva em x
-            rotacao_x = rotacao_x + 20 if (rotacao_x + 20) < 360.0 else (360.0 - rotacao_x + 20)
+            rotacao_x = rotacao_x + 20 if (rotacao_x + 20) < 360.0 else (rotacao_x + 20 - 360.0)
         elif mode == 'e':  # escala positiva em y
             escala_y = escala_y + 0.2
 
@@ -297,7 +331,7 @@ def SpecialInput(key, x, y):
         if mode == 't': # translacao positiva em x
             translacao_x = translacao_x + 0.2
         elif mode == 'r':  # rotacao positiva em y
-            rotacao_y = rotacao_y + 20 if (rotacao_y + 20) < 360.0 else (360.0 - rotacao_y + 20)
+            rotacao_y = rotacao_y + 20 if (rotacao_y + 20) < 360.0 else (rotacao_y + 20 - 360.0)
         elif mode == 'e':  # escala positiva em x
             escala_x = escala_x + 0.2
 
@@ -327,16 +361,33 @@ def initData():
     # Uses vertex arrays.
     global VAO1
     global VBO1
-    global VAO2
-    global VBO2
     global scene
     global vertices
     global vertices_num
+    global cx
+    global cy
+    global cz
 
     if len(sys.argv) == 1:
         vertices = loader.ObjLoader.load_model('cube.obj').astype('float32')
     else:
         vertices = loader.ObjLoader.load_model(str(sys.argv[1])).astype('float32')
+
+    quo = len(vertices)/6
+    x = 0
+    y = 0
+    z = 0
+    i = 0
+    while i < len(vertices):
+        x = x + vertices[i]
+        y = y + vertices[i+1]
+        z = z + vertices[i+2]
+
+        i = i + 3
+
+    cx = x/quo
+    cy = y/quo
+    cz = z/quo
 
     vertices_num = (len(vertices)/6).__int__()
 
@@ -384,7 +435,7 @@ def main():
     print("\t ↑  : deslocamento positivo em Y")
     print("\t ↓  : deslocamento negativo em Y")
     print("\t'a' : deslocamento positivo em Z")
-    print("\t'b' : deslocamento negativo em Z")
+    print("\t'd' : deslocamento negativo em Z")
 
     print("Modo Rotação: 'r'")
     print("\t ↑  : rotação positivo em X")
@@ -392,7 +443,7 @@ def main():
     print("\t →  : rotação positivo em Y")
     print("\t ←  : rotação negativo em Y")
     print("\t'a' : rotação positivo em Z")
-    print("\t'b' : rotação negativo em Z")
+    print("\t'd' : rotação negativo em Z")
 
     print("Modo Escala: 'e'")
     print("\t →  : fator positivo em X")
@@ -400,7 +451,7 @@ def main():
     print("\t ↑  : fator positivo em Y")
     print("\t ↓  : fator negativo em Y")
     print("\t'a' : fator positivo em Z")
-    print("\t'b' : fator negativo em Z")
+    print("\t'd' : fator negativo em Z")
     print("-----------------------------------------------------------")
 
     glut.glutInit()
@@ -408,7 +459,7 @@ def main():
     glut.glutInitContextProfile(glut.GLUT_CORE_PROFILE);
     glut.glutInitDisplayMode(glut.GLUT_DOUBLE | glut.GLUT_RGBA | glut.GLUT_DEPTH)
     glut.glutInitWindowSize(win_width,win_height)
-    glut.glutCreateWindow('Perspective Projection')
+    glut.glutCreateWindow('Trabalho 1')
 
     # Init vertex data for the triangle.
     initData()
