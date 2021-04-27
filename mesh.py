@@ -125,14 +125,13 @@ void main()
 """
 
 ## Fragment shader.
-fragment_code = """
+fragment_code_ilutext = """
 #version 330 core
 
 in vec3 TexCoords;
 uniform samplerCube skybox;
 
 in vec3 fragPosition;
-in vec3 vColor;
 in vec3 vNormal;
 
 out vec4 FragColor;
@@ -141,7 +140,6 @@ uniform vec3 objectColor;
 uniform vec3 lightColor;
 uniform vec3 lightPosition;
 uniform vec3 cameraPosition;
-uniform samplerCube cubemap;
 
 void main()
 {
@@ -164,17 +162,17 @@ void main()
 
     vec3 light = (ambient + diffuse + specular) * objectColor;
 
-    FragColor = texture(skybox, TexCoords);
+    FragColor = texture(skybox, TexCoords) * vec4(light, 1.0);
 } 
 """
 
-frag_code2 = """
+fragmento_code_ilu = """
 #version 330 core
 
-in vec3 vNormal;
 in vec3 fragPosition;
+in vec3 vNormal;
 
-out vec4 fragColor;
+out vec4 FragColor;
 
 uniform vec3 objectColor;
 uniform vec3 lightColor;
@@ -201,7 +199,7 @@ void main()
     vec3 specular = ks * spec * lightColor;
 
     vec3 light = (ambient + diffuse + specular) * objectColor;
-    fragColor = vec4(light, 1.0); 
+    FragColor = vec4(light, 1.0); 
 } 
 """
 
@@ -259,13 +257,13 @@ def display():
 
     # Object color.
     loc = gl.glGetUniformLocation(program, "objectColor")
-    gl.glUniform3f(loc, 0.5, 0.1, 0.1)
+    gl.glUniform3f(loc, 1.0, 1.0, 1.0)
     # Light color.
     loc = gl.glGetUniformLocation(program, "lightColor")
     gl.glUniform3f(loc, 1.0, 1.0, 1.0)
     # Light position.
     loc = gl.glGetUniformLocation(program, "lightPosition")
-    gl.glUniform3f(loc, 0.0, 0.0, 0.0)
+    gl.glUniform3f(loc, 0.0, 0.0, -1.0)
     # Camera position.
     loc = gl.glGetUniformLocation(program, "cameraPosition")
     gl.glUniform3f(loc, 0.0, 0.0, 0.0)
@@ -325,10 +323,12 @@ def keyboard(key, x, y):
     global translacao_camera_z
     global translacao_camera_y
 
+    global program
+
     if key == b'1':
-        program = ut.createShaderProgram(vertex_code, frag_code2)
+        program = ut.createShaderProgram(vertex_code, fragmento_code_ilu)
     elif key == b'2':
-        program = ut.createShaderProgram(vertex_code, fragment_code)
+        program = ut.createShaderProgram(vertex_code, fragment_code_ilutext)
     if key == b'\x1b' or key == b'q':
         sys.exit()
 
@@ -380,8 +380,6 @@ def keyboard(key, x, y):
             rotacao_z = rotacao_z - 20 if (rotacao_z - 20) < 0 else (360.0 + rotacao_z - 20)
         elif mode == 'e':  # escala negativa em z
             escala_z = escala_z - 0.2 if (escala_z - 0.2) > 0.0 else escala_z
-
-    glut.glutPostRedisplay()
 
     glut.glutPostRedisplay()
 
@@ -478,7 +476,7 @@ def initData():
 
     texture = gl.glGenTextures(1)
     gl.glBindTexture(gl.GL_TEXTURE_CUBE_MAP, texture)
-    loadCubemap(["right.jpg", "left.jpg", "top.jpg", "bottom.jpg", "front.jpg", "back.jpg"], "stor")
+    loadCubemap(["right.jpg", "left.jpg", "top.jpg", "bottom.jpg", "front.jpg", "back.jpg"], "yokohama")
     gl.glTexParameteri(gl.GL_TEXTURE_CUBE_MAP, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR);
     gl.glTexParameteri(gl.GL_TEXTURE_CUBE_MAP, gl.GL_TEXTURE_MAG_FILTER, gl.GL_LINEAR);
     gl.glTexParameteri(gl.GL_TEXTURE_CUBE_MAP, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_EDGE);
@@ -546,34 +544,34 @@ def initData():
     # Set pyramid vertices.
     pyramid = np.array([
         # Front face
-        # coordinates     # color
-        0.0, 1.0, 0.0,
-        -1.0, -1.0, 0.0,
-        1.0, -1.0, 0.0,
+        # coordinates     # normals
+        0.0, 1.0, 0.0,   0.0, 1.0, 0.0,
+        -1.0, -1.0, 0.0, 1.0, 0.0, 1.0,
+        1.0, -1.0, 0.0,  0.0, 1.0, 0.0,
         # Right face
-        1.0, -1.0, 0.0,
-        0.0, 1.0, 0.0,
-        0.0, -1.0, -1.0,
+        1.0, -1.0, 0.0,  0.0, 1.0, 0.0,
+        0.0, 1.0, 0.0,   1.0, 0.0, 1.0,
+        0.0, -1.0, -1.0, 0.0, 1.0, 0.0,
         # Left face
-        -1.0, -1.0, 0.0,
-        0.0, 1.0, 0.0,
-        0.0, -1.0, -1.0,
+        -1.0, -1.0, 0.0, 0.0, 1.0, 0.0,
+        0.0, 1.0, 0.0,   1.0, 0.0, 1.0,
+        0.0, -1.0, -1.0, 0.0, 1.0, 0.0,
         # Bottom face 1
-        -1.0, -1.0, 0.0,
-        1.0, -1.0, 0.0,
-        0.0, -1.0, -1.0,
+        -1.0, -1.0, 0.0, 0.0, 1.0, 0.0,
+        1.0, -1.0, 0.0,  1.0, 0.0, 1.0,
+        0.0, -1.0, -1.0, 0.0, 1.0, 0.0,
         # back right face
-        1.0, -1.0, 0.0,
-        0.0, 1.0, 0.0,
-        0.0, -1.0, 1.0,
+        1.0, -1.0, 0.0,  0.0, 1.0, 0.0,
+        0.0, 1.0, 0.0,   1.0, 0.0, 1.0,
+        0.0, -1.0, 1.0,  0.0, 1.0, 0.0,
         # back left face
-        -1.0, -1.0, 0.0,
-        0.0, 1.0, 0.0,
-        0.0, -1.0, 1.0,
+        -1.0, -1.0, 0.0, 0.0, 1.0, 0.0,
+        0.0, 1.0, 0.0,   1.0, 0.0, 1.0,
+        0.0, -1.0, 1.0,  0.0, 1.0, 0.0,
         # Bottom face 2
-        -1.0, -1.0, 0.0,
-        1.0, -1.0, 0.0,
-        0.0, -1.0, 1.0,
+        -1.0, -1.0, 0.0, 0.0, 1.0, 0.0,
+        1.0, -1.0, 0.0,  1.0, 0.0, 1.0,
+        0.0, -1.0, 1.0,  0.0, 1.0, 0.0,
     ], dtype='float32')
 
     # Vertex array.
@@ -586,8 +584,10 @@ def initData():
     gl.glBufferData(gl.GL_ARRAY_BUFFER, pyramid.nbytes, pyramid, gl.GL_STATIC_DRAW)
 
     # Set attributes.
-    gl.glVertexAttribPointer(0, 3, gl.GL_FLOAT, gl.GL_FALSE, 3 * pyramid.itemsize, None)
+    gl.glVertexAttribPointer(0, 3, gl.GL_FLOAT, gl.GL_FALSE, 6 * pyramid.itemsize, None)
     gl.glEnableVertexAttribArray(0)
+    gl.glVertexAttribPointer(1, 3, gl.GL_FLOAT, gl.GL_FALSE, 6 * pyramid.itemsize, c_void_p(3*pyramid.itemsize))
+    gl.glEnableVertexAttribArray(1)
 
     # Unbind Vertex Array Object.
     gl.glBindVertexArray(0)
@@ -602,7 +602,7 @@ def initData():
 def initShaders():
     global program
 
-    program = ut.createShaderProgram(vertex_code, fragment_code)
+    program = ut.createShaderProgram(vertex_code, fragment_code_ilutext)
 
 
 def loadCubemap(faces, path):
