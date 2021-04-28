@@ -4,6 +4,13 @@ import numpy as np
 class ObjLoader:
 
     def load_model(file):
+        maiorX = -99.0
+        menorX = +99.0
+        maiorY = -99.0
+        menorY = +99.0
+        maiorZ = -99.0
+        menorZ = +99.0
+
         # v
         vertex_positions = []
         # vt
@@ -28,13 +35,32 @@ class ObjLoader:
 
                 if len(values):
                     if values[0] == 'v':
+                        i = 0
                         for d in values[1:]:
+                            '''
+                            if i == 0:
+                                if float(d) >= maiorX:
+                                    maiorX = float(d)
+                                if float(d) <= menorX:
+                                    menorX = float(d)
+                            elif i == 1:
+                                if float(d) >= maiorY:
+                                    maiorY = float(d)
+                                if float(d) <= menorY:
+                                    menorY = float(d)
+                            elif i == 2:
+                                if float(d) >= maiorZ:
+                                    maiorZ = float(d)
+                                if float(d) <= menorZ:
+                                    menorZ = float(d)
+                            i = i + 1
+                            '''
                             temp_vec3.append(float(d))
                         vertex_positions.append(temp_vec3)
-                    elif values[0] == 'vt':
-                        for d in values[1:]:
-                            temp_vec2.append(float(d))
-                        vertex_textcoords.append(temp_vec2)
+                    #elif values[0] == 'vt':
+                    #    for d in values[1:]:
+                    #        temp_vec2.append(float(d))
+                    #    vertex_textcoords.append(temp_vec2)
                     elif values[0] == 'vn':
                         for d in values[1:]:
                             temp_vec3.append(float(d))
@@ -48,8 +74,8 @@ class ObjLoader:
                                 if v != '':
                                     if i == 0:
                                         vertex_position_indices.append(int(v)-1)
-                                    elif i == 1:
-                                        vertex_position_textcoord.append(int(v)-1)
+                                    #elif i == 1:
+                                    #    vertex_position_textcoord.append(int(v)-1)
                                     elif i == 2:
                                         vertex_position_normal.append(int(v)-1)
 
@@ -57,9 +83,11 @@ class ObjLoader:
 
                 line = f.readline()
 
+        center = np.array([(maiorX - menorX) / 2, (maiorY - menorY) / 2, (maiorZ - menorZ) / 2], dtype='float32')
         i = 0
         while i < len(vertex_position_indices):
             vertices = np.append(vertices, vertex_positions[vertex_position_indices[i]])
+            #vertices = np.append(vertices, vertex_positions[vertex_position_indices[i]] - center)
 
             vertices = np.append(vertices, vertex_normals[vertex_position_normal[i]])
 
