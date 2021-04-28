@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 
-## @file projection3.py
-# Applies a perspective projection to draw a cube and a pyramid.
-#
-# @author Ricardo Dutra da Silva
+# @author Guilherme Rossi
 
 
 import sys
@@ -473,7 +470,7 @@ def initData():
     global center
 
     if len(sys.argv) == 1:
-        vertices = loader.ObjLoader.load_model('capsule.obj').astype('float32')
+        vertices = loader.ObjLoader.load_model('cube.obj').astype('float32')
     else:
         vertices = loader.ObjLoader.load_model(str(sys.argv[1])).astype('float32')
 
@@ -481,7 +478,7 @@ def initData():
 
     texture = gl.glGenTextures(1)
     gl.glBindTexture(gl.GL_TEXTURE_CUBE_MAP, texture)
-    loadCubemap(["right.jpg", "left.jpg", "top.jpg", "bottom.jpg", "front.jpg", "back.jpg"], "ocean")
+    loadCubemap(["right.jpg", "left.jpg", "top.jpg", "bottom.jpg", "front.jpg", "back.jpg"], "ocean" if len(sys.argv) == 1 else sys.argv[2])
     gl.glTexParameteri(gl.GL_TEXTURE_CUBE_MAP, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR);
     gl.glTexParameteri(gl.GL_TEXTURE_CUBE_MAP, gl.GL_TEXTURE_MAG_FILTER, gl.GL_LINEAR);
     gl.glTexParameteri(gl.GL_TEXTURE_CUBE_MAP, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_EDGE);

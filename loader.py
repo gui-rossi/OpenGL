@@ -37,7 +37,7 @@ class ObjLoader:
                     if values[0] == 'v':
                         i = 0
                         for d in values[1:]:
-                            '''
+
                             if i == 0:
                                 if float(d) >= maiorX:
                                     maiorX = float(d)
@@ -54,7 +54,7 @@ class ObjLoader:
                                 if float(d) <= menorZ:
                                     menorZ = float(d)
                             i = i + 1
-                            '''
+
                             temp_vec3.append(float(d))
                         vertex_positions.append(temp_vec3)
                     #elif values[0] == 'vt':
@@ -83,11 +83,11 @@ class ObjLoader:
 
                 line = f.readline()
 
-        center = np.array([(maiorX - menorX) / 2, (maiorY - menorY) / 2, (maiorZ - menorZ) / 2], dtype='float32')
+        center = np.array([(maiorX + menorX) / 2, (maiorY + menorY) / 2, (maiorZ + menorZ) / 2], dtype='float32')
         i = 0
         while i < len(vertex_position_indices):
-            vertices = np.append(vertices, vertex_positions[vertex_position_indices[i]])
-            #vertices = np.append(vertices, vertex_positions[vertex_position_indices[i]] - center)
+            #vertices = np.append(vertices, vertex_positions[vertex_position_indices[i]])
+            vertices = np.append(vertices, vertex_positions[vertex_position_indices[i]] - center)
 
             vertices = np.append(vertices, vertex_normals[vertex_position_normal[i]])
 
