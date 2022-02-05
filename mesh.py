@@ -3,7 +3,7 @@
 ## @file projection3.py
 # Applies a perspective projection to draw a cube and a pyramid.
 #
-# @author Ricardo Dutra da Silva
+# @author Guilherme Rossi
 
 
 import sys
